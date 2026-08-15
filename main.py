@@ -10,7 +10,7 @@ SUPABASE_URL=os.environ["SUPABASE_URL"]
 SUPABASE_SECRET_KEY=os.environ["SUPABASE_SECRET_KEY"]
 OLX_CLIENT_ID=os.getenv("OLX_CLIENT_ID","")
 OLX_CLIENT_SECRET=os.getenv("OLX_CLIENT_SECRET","")
-OLX_CALLBACK_URL=os.getenv("OLX_CALLBACK_URL","https://radar.gaworagro.pl/auth/olx/callback")
+OLX_CALLBACK_URL=os.getenv("OLX_CALLBACK_URL","https://gawor-radar-pro.onrender.com/auth/olx/callback")
 OLX_BASE="https://www.olx.pl"
 
 sb=create_client(SUPABASE_URL,SUPABASE_SECRET_KEY)
