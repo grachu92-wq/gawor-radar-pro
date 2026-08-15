@@ -1,1 +1,133 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173f5f"><title>Gawor Agro — Radar PRO</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.102.0/dist/umd/supabase.min.js"></script><style>body{font-family:Arial;margin:0;background:#f4f6f8;color:#17212b}header{background:#173f5f;color:#fff;padding:16px}.auth{min-height:100vh;display:grid;place-items:center}.card,.panel{background:#fff;border-radius:13px;padding:16px;margin:12px;box-shadow:0 2px 8px #0001}.auth .card{width:min(380px,90%)}input,select,button{padding:10px;margin:4px;border-radius:8px;border:1px solid #ccd5db}button{background:#173f5f;color:#fff;font-weight:bold}.hidden{display:none}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px}.lead{border-top:1px solid #ddd;padding:10px}.red{color:#a00000}@media(max-width:700px){.kpis{grid-template-columns:1fr 1fr}}</style></head><body><section id="login" class="auth"><div class="card"><h2>🌾 Gawor Agro Radar PRO</h2><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Hasło"><br><button onclick="loginUser()">Zaloguj</button><button onclick="signup()">Utwórz konto</button><button onclick="resetPw()">Reset hasła</button><p id="msg"></p></div></section><section id="app" class="hidden"><header><b>GAWOR AGRO • RADAR PRO</b><button style="float:right" onclick="logout()">Wyloguj</button></header><div class="kpis"><div class="card">🔴 Pilne<h2 id="u">0</h2></div><div class="card">📞 Telefony<h2 id="c">0</h2></div><div class="card">🌾 Tony<h2 id="t">0</h2></div><div class="card">💰 Marża<h2 id="m">0 zł</h2></div></div><div class="panel"><button onclick="load()">↻ Odśwież</button><a href="/auth/olx/start"><button>🔗 Połącz OLX</button></a></div><div class="panel"><h3>🎯 Najlepsze leady</h3><div id="leads">Ładowanie…</div></div></section><script>const cfg={url:'https://aohywvqmjychkjqejfbg.supabase.co',key:'sb_publishable_exd3X68g0OBdd6Wql5SZjg_I-yvAkdj'};const sb=supabase.createClient(cfg.url,cfg.key);let data=[];async function loginUser(){let{error}=await sb.auth.signInWithPassword({email:email.value,password:password.value});if(error)msg.textContent=error.message;else boot()}async function signup(){let{error}=await sb.auth.signUp({email:email.value,password:password.value});msg.textContent=error?error.message:'Konto utworzone — sprawdź email.'}async function resetPw(){let{error}=await sb.auth.resetPasswordForEmail(email.value,{redirectTo:location.origin});msg.textContent=error?error.message:'Wysłano instrukcję.'}async function logout(){await sb.auth.signOut();location.reload()}async function boot(){let{data:x}=await sb.auth.getUser();if(!x.user)return;login.classList.add('hidden');app.classList.remove('hidden');load()}function profit(x){return(Number(x.sell)-Number(x.buy)-Number(x.transport))*Number(x.qty)}async function load(){let{data:x,error}=await sb.from('leads').select('*').order('score',{ascending:false}).limit(500);if(error){leads.textContent=error.message;return}data=x||[];u.textContent=data.filter(x=>x.priority==='PILNY').length;c.textContent=data.filter(x=>['Nowy','Do telefonu','Oferta'].includes(x.status)).length;t.textContent=data.reduce((a,x)=>a+Number(x.qty),0);m.textContent=Math.round(data.reduce((a,x)=>a+profit(x),0)).toLocaleString('pl-PL')+' zł';leads.innerHTML=data.slice(0,30).map(x=>`<div class="lead"><b>${x.commodity} • ${x.qty} t</b> <span class="red">${x.priority} ${x.score}</span><br>📍 ${x.place||'-'} • ${x.distance_km||0} km • ${x.source}<br>💰 ${(Number(x.sell)-Number(x.buy)-Number(x.transport)).toFixed(0)} zł/t • ${profit(x).toFixed(0)} zł ${x.phone?`• <a href="tel:${x.phone}">📞</a>`:''}</div>`).join('')||'Brak leadów'}sb.auth.onAuthStateChange((e,s)=>{if(s)boot()});boot()</script></body></html>
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173f5f">
+<title>Gawor Agro — Radar PRO</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.102.0/dist/umd/supabase.min.js"></script>
+<style>
+:root{--nav:#173f5f;--bg:#f4f6f8;--card:#fff;--text:#17212b;--muted:#687782;--line:#dce3e8;--red:#a52222;--orange:#9a4b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--nav);color:#fff;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}.brand{font-weight:850;font-size:20px}.small{font-size:11px;opacity:.8}
+main{max-width:1200px;margin:auto;padding:14px}.hidden{display:none!important}
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px}.authcard{background:#fff;max-width:410px;width:100%;border-radius:16px;padding:24px;box-shadow:0 8px 30px #0001}.authcard h1{margin:0 0 4px}.authcard p{color:var(--muted);font-size:13px}
+label{font-size:11px;font-weight:800;color:var(--muted);display:block;margin:9px 0 4px}input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff}textarea{min-height:70px}
+button,.btn{border:0;border-radius:9px;padding:11px 13px;background:var(--nav);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}.btn2{background:#e8eef2;color:var(--nav)}.btnDanger{background:var(--red)}
+.authActions{display:grid;gap:8px;margin-top:14px}.msg{font-size:12px;margin-top:10px;padding:9px;border-radius:9px}.err{background:#f4cccc;color:#7a0000}.ok{background:#d9ead3;color:#285c2d}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.nav button.active{background:#365f7a}.nav button{background:#e8eef2;color:var(--nav)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.card{background:#fff;border-radius:13px;padding:14px;box-shadow:0 2px 8px #0001}.label{font-size:11px;color:var(--muted)}.num{font-size:26px;font-weight:850;margin-top:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.panel{background:#fff;border-radius:13px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0001}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}.lead{border:1px solid var(--line);border-radius:12px;padding:11px;margin:8px 0}.top{display:flex;justify-content:space-between;gap:9px}.badge{padding:5px 8px;border-radius:999px;font-size:10px;font-weight:850;white-space:nowrap}.p1{background:#f4cccc;color:#8b0000}.p2{background:#fce5cd;color:#9a4b00}.p3{background:#fff2cc;color:#7a6200}.meta{color:var(--muted);font-size:12px;line-height:1.5}.profit{font-weight:850;margin-top:6px}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.olxStatus{padding:10px;border-radius:9px;background:#eef3f6;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e7ebee;text-align:left}th{background:#f1f5f7}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.row{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.row,.filters{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<section id="loginView" class="auth">
+  <div class="authcard">
+    <h1>🌾 Gawor Agro Radar PRO</h1>
+    <p>Centralny system pozyskiwania surowca.</p>
+    <label>Email</label><input id="email" type="email" autocomplete="username">
+    <label>Hasło</label><input id="password" type="password" autocomplete="current-password">
+    <div class="authActions">
+      <button onclick="login()">Zaloguj</button>
+      <button class="btn2" onclick="signup()">Utwórz konto</button>
+      <button class="btn2" onclick="resetPassword()">Reset hasła</button>
+    </div>
+    <div id="authMsg"></div>
+  </div>
+</section>
+
+<section id="appView" class="hidden">
+<header><div><div class="brand">GAWOR AGRO • RADAR PRO</div><div class="small">Pakosławice • centralna baza • web app</div></div><div><span id="userEmail" class="small"></span> <button class="btn2" onclick="logout()">Wyloguj</button></div></header>
+<main>
+<div class="nav">
+  <button class="active" onclick="tab('dashboard',this)">🏠 Dashboard</button>
+  <button onclick="tab('leads',this)">🎯 Leady</button>
+  <button onclick="tab('add',this)">➕ Dodaj lead</button>
+  <button onclick="tab('olx',this)">🔗 OLX</button>
+</div>
+
+<section id="dashboard">
+  <div class="kpis">
+    <div class="card"><div class="label">🔴 PILNE</div><div class="num" id="kUrgent">0</div></div>
+    <div class="card"><div class="label">📞 DO TELEFONU</div><div class="num" id="kCalls">0</div></div>
+    <div class="card"><div class="label">🌾 TONY</div><div class="num" id="kTons">0</div></div>
+    <div class="card"><div class="label">💰 POT. MARŻA</div><div class="num" id="kProfit">0 zł</div></div>
+    <div class="card"><div class="label">📡 OLX</div><div class="num" id="kOlx">0</div></div>
+  </div>
+  <div class="grid2" style="margin-top:12px">
+    <div class="panel"><h3>🔥 Najlepsze leady</h3><div id="topLeads"></div></div>
+    <div class="panel"><h3>📌 Dzisiaj</h3><div id="todayInfo" class="meta">Ładowanie…</div></div>
+  </div>
+</section>
+
+<section id="leads" class="hidden">
+  <div class="panel">
+    <h3>🎯 Radar leadów</h3>
+    <div class="filters">
+      <input id="search" placeholder="Szukaj miejscowości, telefonu, notatki">
+      <select id="fCom"><option value="">Wszystkie towary</option><option>Pszenica</option><option>Jęczmień</option><option>Rzepak</option><option>Pszenżyto</option><option>Kukurydza</option><option>Kukurydza mokra</option></select>
+      <select id="fPri"><option value="">Wszystkie priorytety</option><option>PILNY</option><option>DOBRY</option><option>SLABY</option></select>
+      <select id="fStatus"><option value="">Wszystkie statusy</option><option>Nowy</option><option>Do telefonu</option><option>Kontakt wykonany</option><option>Oferta</option><option>Kontrakt</option><option>Zamknięty</option></select>
+    </div>
+    <div id="leadList"></div>
+  </div>
+</section>
+
+<section id="add" class="hidden">
+  <div class="panel"><h3>➕ Dodaj lead</h3>
+  <div class="row">
+    <div><label>Towar</label><select id="commodity"><option>Pszenica</option><option>Jęczmień</option><option>Rzepak</option><option>Pszenżyto</option><option>Kukurydza</option><option>Kukurydza mokra</option></select></div>
+    <div><label>Źródło</label><select id="source"><option>Telefon</option><option>OLX</option><option>Facebook</option><option>Google</option><option>Baza własna</option></select></div>
+    <div><label>Miejscowość</label><input id="place"></div><div><label>Odległość km</label><input id="distance" type="number" value="20"></div>
+    <div><label>Ilość t</label><input id="qty" type="number" value="50"></div><div><label>Cena zakupu zł/t</label><input id="buy" type="number" value="790"></div>
+    <div><label>Transport zł/t</label><input id="transport" type="number" value="20"></div><div><label>Cena sprzedaży zł/t</label><input id="sell" type="number" value="825"></div>
+    <div><label>Telefon</label><input id="phone" type="tel"></div><div><label>Link</label><input id="url" type="url"></div>
+    <div><label>Wilgotność %</label><input id="moisture" type="number" step="0.1"></div>
+  </div>
+  <label>Notatka</label><textarea id="note"></textarea>
+  <div class="actions"><button onclick="addLead()">Dodaj do radaru</button></div>
+  </div>
+</section>
+
+<section id="olx" class="hidden">
+  <div class="panel"><h3>🔗 Moduł OLX</h3>
+    <div id="olxStatus" class="olxStatus">Sprawdzanie...</div>
+    <div class="actions"><a id="olxConnect" class="btn" href="/auth/olx/start">Połącz z OLX</a><button class="btn2" onclick="syncOlx()">Synchronizuj teraz</button></div>
+  </div>
+  <div class="panel"><h3>📋 Własne ogłoszenia OLX</h3><div id="olxList"></div></div>
+</section>
+</main></section>
+
+<script>
+const cfg={url:"https://aohywvqmjychkjqejfbg.supabase.co",key:"sb_publishable_exd3X68g0OBdd6Wql5SZjg_I-yvAkdj"};
+const supabase=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+let leads=[];
+
+function msg(text,type='err'){const el=document.getElementById('authMsg');el.className='msg '+type;el.textContent=text}
+async function login(){const {error}=await supabase.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)return msg(error.message);await boot()}
+async function signup(){const {error}=await supabase.auth.signUp({email:email.value.trim(),password:password.value,options:{emailRedirectTo:location.origin}});if(error)return msg(error.message,'err');msg('Konto utworzone. Sprawdź email, jeśli potwierdzenie jest wymagane.','ok')}
+async function resetPassword(){const e=email.value.trim();if(!e)return msg('Wpisz email');const {error}=await supabase.auth.resetPasswordForEmail(e,{redirectTo:location.origin});if(error)return msg(error.message);msg('Wysłaliśmy instrukcję resetu hasła.','ok')}
+async function logout(){await supabase.auth.signOut();location.reload()}
+function showLoggedIn(user){loginView.classList.add('hidden');appView.classList.remove('hidden');userEmail.textContent=user.email||''}
+function showLoggedOut(){appView.classList.add('hidden');loginView.classList.remove('hidden')}
+async function boot(){const {data:{user}}=await supabase.auth.getUser();if(!user)return showLoggedOut();showLoggedIn(user);await loadAll()}
+supabase.auth.onAuthStateChange((_e,session)=>{if(session)showLoggedIn(session.user);else showLoggedOut()});
+
+function tab(id,btn){['dashboard','leads','add','olx'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='leads')renderLeads();if(id==='olx')loadOlx();}
+
+async function loadLeads(){const {data,error}=await supabase.from('leads').select('*').order('score',{ascending:false}).limit(500);if(error){alert(error.message);return}leads=data||[]}
+function profit(x){return (Number(x.sell)-Number(x.buy)-Number(x.transport))*Number(x.qty)}
+function leadCard(x){const cls=x.priority==='PILNY'?'p1':x.priority==='DOBRY'?'p2':'p3';return `<div class="lead"><div class="top"><div><b>${x.commodity} • ${x.qty} t</b><div class="meta">${x.place||'brak'} • ${x.distance_km||0} km • ${x.source}</div></div><span class="badge ${cls}">${x.priority} • ${x.score}</span></div><div class="profit">${(Number(x.sell)-Number(x.buy)-Number(x.transport)).toFixed(0)} zł/t • ${profit(x).toFixed(0)} zł</div><div class="meta">Status: ${x.status}${x.moisture?' • wilg. '+x.moisture+'%':''}</div><div class="actions">${x.phone?`<a class="btn2" href="tel:${x.phone}">📞 Dzwoń</a>`:''}${x.url?`<a class="btn2" href="${x.url}" target="_blank">🔗 Ogłoszenie</a>`:''}<select onchange="setStatus(${x.id},this.value)"><option ${x.status==='Nowy'?'selected':''}>Nowy</option><option ${x.status==='Do telefonu'?'selected':''}>Do telefonu</option><option ${x.status==='Kontakt wykonany'?'selected':''}>Kontakt wykonany</option><option ${x.status==='Oferta'?'selected':''}>Oferta</option><option ${x.status==='Kontrakt'?'selected':''}>Kontrakt</option><option ${x.status==='Zamknięty'?'selected':''}>Zamknięty</option></select></div></div>`}
+function renderLeads(){const q=(search.value||'').toLowerCase(),c=fCom.value,p=fPri.value,s=fStatus.value;const a=leads.filter(x=>(!q||(`${x.place} ${x.phone} ${x.note}`).toLowerCase().includes(q))&&(!c||x.commodity===c)&&(!p||x.priority===p)&&(!s||x.status===s));leadList.innerHTML=a.map(leadCard).join('')||'<div class="meta">Brak wyników.</div>'}
+async function setStatus(id,status){const {error}=await supabase.from('leads').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(error)alert(error.message);await loadAll()}
+async function addLead(){const x={commodity:commodity.value,source:source.value,place:place.value,distance_km:+distance.value,qty:+qty.value,buy:+buy.value,transport:+transport.value,sell:+sell.value,phone:phone.value,url:url.value,moisture:moisture.value?+moisture.value:null,note:note.value};let score=0;score+=x.qty>=50?15:0;score+=x.distance_km<=30?10:x.distance_km<=50?5:0;score+=x.phone?20:0;score+=x.place?20:0;score+=15;score+=x.distance_km>70?-20:0;score+=x.qty<10?-10:0;score+=(x.sell-x.buy-x.transport)>0?15:0;x.score=score;x.priority=score>=80?'PILNY':score>=55?'DOBRY':'SLABY';const {error}=await supabase.from('leads').insert(x);if(error)return alert(error.message);alert('Lead dodany');await loadAll();tab('leads',document.querySelectorAll('.nav button')[1])}
+async function loadOlx(){const r=await fetch('/olx/status');const s=await r.json();olxStatus.textContent=s.connected?`🟢 Połączono • ${s.adverts} własnych ogłoszeń`:'🔴 OLX niepołączony';const a=await fetch('/olx/adverts').then(r=>r.json()).catch(()=>[]);olxList.innerHTML=a.map(x=>`<div class="lead"><b>${x.title||'(bez tytułu)'}</b><div class="meta">${x.status||''} • ${x.city_name||''} • ${x.price||''} ${x.currency||''}</div>${x.url?`<a class="btn2" href="${x.url}" target="_blank">Otwórz OLX</a>`:''}</div>`).join('')||'<div class="meta">Brak zsynchronizowanych ogłoszeń.</div>'}
+async function syncOlx(){const r=await fetch('/olx/sync',{method:'POST'});const x=await r.json();alert(x.ok?`Zsynchronizowano ${x.count||0} ogłoszeń.`:(x.detail||x.reason||'Błąd synchronizacji'));await loadOlx()}
+async function loadAll(){await loadLeads();kUrgent.textContent=leads.filter(x=>x.priority==='PILNY').length;kCalls.textContent=leads.filter(x=>['Nowy','Do telefonu','Oferta'].includes(x.status)).length;kTons.textContent=leads.reduce((a,x)=>a+Number(x.qty),0);kProfit.textContent=Math.round(leads.reduce((a,x)=>a+profit(x),0)).toLocaleString('pl-PL')+' zł';topLeads.innerHTML=leads.slice(0,5).map(leadCard).join('')||'<div class="meta">Brak leadów.</div>';todayInfo.innerHTML=`Łącznie leadów: <b>${leads.length}</b><br>Najlepszy priorytet: <b>${leads[0]?.priority||'-'}</b>`;try{kOlx.textContent=(await fetch('/olx/status').then(r=>r.json())).adverts||0}catch{}renderLeads()}
+['search','fCom','fPri','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderLeads));
+boot();
+</script>
+</body></html>
