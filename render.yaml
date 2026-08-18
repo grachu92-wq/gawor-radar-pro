@@ -18,3 +18,13 @@ services:
         value: https://gawor-radar-pro.onrender.com/auth/olx/callback
       - key: OLX_SCOPE
         value: read write v2
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
+      - key: META_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: META_GRAPH_VERSION
+        value: v25.0
+      - key: META_WEBHOOK_PATH
+        value: /webhooks/meta/leadgen
